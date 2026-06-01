@@ -9946,6 +9946,14 @@ textarea.memory-add-input {
   gap: 4px;
 }
 
+/* The generic `.hidden { display:none }` is defined earlier in the file, so
+   this later `.memory-list { display:flex }` rule of equal specificity won
+   the cascade and kept the list visible when `.hidden` was applied. During
+   import review the (now empty) memories list therefore stayed as a flex:1
+   box and ate half the modal height. Mirror the existing
+   `.memory-suggestions.hidden` rule so the list actually hides. */
+.memory-list.hidden { display: none; }
+
 .memory-item.task-paused {
   opacity: 0.45 !important;
   filter: saturate(0.55);
@@ -10503,10 +10511,39 @@ textarea.memory-add-input {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  /* Fill the modal and let the inner .memory-suggestions-list own scrolling,
+     so the header stays fixed above a scrollable list instead of the whole
+     thing overflowing the overflow:hidden .admin-card (which clipped lower
+     entries and their controls with no usable scroll area). overflow:visible
+     lets the list reach into the card's right padding for its scrollbar. */
+  flex: 1;
+  min-height: 0;
+  overflow: visible;
 }
 
 .memory-suggestions.hidden {
   display: none;
+}
+
+/* Only the items scroll; the header sits fixed above so the scrollbar starts
+   below it (not alongside the save all/back controls). padding-right keeps the
+   scrollbar clear of the item cards and the card edge. */
+.memory-suggestions-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* Extend the scroll area into the admin-card's ~12px right padding (negative
+     margin) so the scrollbar sits at the outer edge, and pad the items in a
+     few px past that so even the wider hover guide-rail lands in the gutter
+     instead of clipping the card edges. The header gets the matching inset
+     below so the cards stay aligned with it. */
+  margin-right: -12px;
+  padding-right: 18px;
 }
 
 .memory-suggestions-header {
@@ -10517,6 +10554,11 @@ textarea.memory-add-input {
   color: color-mix(in srgb, var(--fg) 70%, transparent);
   padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  /* Match the inset the scrolling list adds on its right (18px padding minus
+     the 12px it borrows back via negative margin = 6px), so the header — and
+     its underline — line up with the item cards. */
+  margin-right: 6px;
 }
 .memory-suggestions-actions,
 .memory-suggestion-actions {
